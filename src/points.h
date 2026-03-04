@@ -1,7 +1,6 @@
-#include "raylib.h"
 
 #define POINTCOUNT 8 
-#define SAMPLES 22 
+#define SAMPLES 30 
 #define RADIUS 10.0
 
 
@@ -19,6 +18,20 @@ void getPoints(Vector2 *points,Vector2 *out){
   }
 }
 
+void reverseArray(Vector2 *out){
+  Vector2 rArray[SAMPLES];
+  for(int i = 0; i < SAMPLES; i++){
+    rArray[i] = out[(SAMPLES -1)  - i];
+    
+    /* DrawCircleV(rArray[i],10, MAGENTA); */
+  }
+  
+  for(int i = 0; i < SAMPLES; i++){
+    out[i] = rArray[i];
+    
+    /* DrawCircleV(rArray[i],10, MAGENTA); */
+  }
+}
 
 void drawPoints(Vector2 *allPoints){
   for(int i = 0; i < POINTCOUNT; i++){ 
@@ -66,35 +79,21 @@ void createBilinearSurface(Vector2 point1, Vector2 point2, Vector2 point3, Vecto
 
 
 
-Vector2 createRuledSurfaceSection(Vector2 point1, Vector2 point2){
-  Vector2 arr;
-
-  for(int i = 0; i < SAMPLES; i++){
-
-    float t = (float) i/(SAMPLES-1);
-    arr = Vec2Lerp(point1, point2,  t);
-    //uncomment for debug mode 
-    DrawCircleV(arr, 1, RED);
-  }
-
-  return arr;
-  
-}
 
 
 void createRuledSurface(Vector2 *curve1, Vector2 *curve2, Vector2 *curve3, Vector2 *curve4 ){
 
-  for(int i = 0; i < SAMPLES-1; i++){
-    for(int j = 0; j < SAMPLES-1;j++){
-      interpPoints[i][j] = createRuledSurfaceSection(curve1[i], curve3[(SAMPLES-1) - i]);
+  for(int i = 0; i < SAMPLES; i++){
+    float s = (float) i/(SAMPLES-1);
+    for(int j = 0; j < SAMPLES;j++){
+      
+      float t = (float) j/(SAMPLES-1);
+      interpPoints[i][j] = Vec2Lerp(curve1[i], curve3[i], t);
+      interpPoints2[i][j] = Vec2Lerp(curve2[j], curve4[j],s);
+      /* DrawCircleV(interpPoints[i][j], 2, DARKGREEN); */
     }
   }
 
-  for(int i = 0; i < SAMPLES-1; i++){
-    for(int j = 0; j < SAMPLES-1;j++){
-      interpPoints2[i][j] = createRuledSurfaceSection(curve2[i], curve4[(SAMPLES-1) - i]);
-    }
-  }
 
   
 }
@@ -105,11 +104,15 @@ void blendSurface(){
   for(int i = 0; i < SAMPLES; i++){
     for(int j = 0; j < SAMPLES; j++){
       Vector2 blendedpoint;
-	blendedpoint.x = interpPoints[i][j].x + interpPoints2[i][j].x - bilinearPoint[i][j].x;
-	blendedpoint.y = interpPoints[i][j].y + interpPoints2[i][j].y - bilinearPoint[i][j].y;
+	blendedpoint.x = interpPoints2[i][j].x + interpPoints[i][j].x - bilinearPoint[i][j].x;
+	blendedpoint.y = interpPoints2[i][j].y + interpPoints[i][j].y - bilinearPoint[i][j].y;
       blendedPoints[i][j] = blendedpoint;
-      DrawCircleV(blendedPoints[i][j], 2, BLUE);
     }
   }
 
+  for(int i = 0; i < SAMPLES; i++){
+    for(int j = 0; j < SAMPLES; j++){
+      DrawCircleV(blendedPoints[i][j], 2, DARKGREEN);
+    }
+  }
 }

@@ -1,7 +1,7 @@
 
 
 
-#define SAMPLES 22 
+#define SAMPLES 30 
 
 #include "everything.c"
 
@@ -16,13 +16,13 @@ int main(void)
   InitWindow(screenWidth, screenHeight, "raylib [shapes] example - basic shapes drawing");
   SetTargetFPS(60);              
   Vector2 point1 = {100, 100};
-  Vector2 point2 = {200, 10};
-  Vector2 point3 = {200, 20};
-  Vector2 point4 = {(300 + 300), 150};
+  Vector2 point2 = {200, 100};
+  Vector2 point3 = {300, 100};
+  Vector2 point4 = {300, 150};
   Vector2 point5 = {300, 200};
-  Vector2 point6 = {(300+100)/2, 400};
+  Vector2 point6 = {(300+100)/2, 200};
   Vector2 point7 = {100, 200};
-  Vector2 point8 = {20, 150};
+  Vector2 point8 = {100, 150};
   Vector2 *curve1;
   Vector2 *curve2;
   Vector2 *curve3;
@@ -38,6 +38,7 @@ int main(void)
       Vector2 points3[3] = {point5, point6, point7}; 
       Vector2 points4[3] = {point7, point8, point1};
       Vector2 mouse = GetMousePosition();
+      point3 = mouse;
       Vector2 allPoints[8] = {
 	point1,
 	point2,
@@ -63,12 +64,20 @@ int main(void)
       ClearBackground(RAYWHITE);
 
      
-      //use this exact configuration unless the function changes ok 
-      createBilinearSurface(curve3[0], curve4[0], curve2[0], curve1[0]);
 
       
+      reverseArray(curve3);
+      reverseArray(curve4);
+
+      createBilinearSurface(point1, point3, point7, point5);
       
       
+      point4.x = (point5.x + point3.x)/2;
+      point4.y = ( point5.y + point3.y)/2;
+      point2.x = (point1.x + point3.x)/2;
+      point2.y = ( point1.y + point3.y)/2;
+
+      //use this exact configuration unless the function changes ok 
       createRuledSurface(curve1, curve2, curve3, curve4);
       
       blendSurface();
