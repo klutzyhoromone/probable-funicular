@@ -27,62 +27,68 @@ int main(void)
   Vector2 *curve2;
   Vector2 *curve3;
   Vector2 *curve4;
+      Vector2 allPoints[8] = {
+        point1,
+        point2,
+        point3,
+        point4,
+        point5,
+        point6,
+        point7,
+        point8
+      };
 
-  
+
   while (!WindowShouldClose())
     {
       
       DrawFPS(20, 20);
-      Vector2 points[3] = { point1, point2, point3};
-      Vector2 points2[3] = {point3, point4, point5};
-      Vector2 points3[3] = {point5, point6, point7}; 
-      Vector2 points4[3] = {point7, point8, point1};
+
       Vector2 mouse = GetMousePosition();
-      point3 = mouse;
-      Vector2 allPoints[8] = {
-	point1,
-	point2,
-	point3,
-	point4,
-	point5,
-	point6,
-	point7,
-	point8
-      };
-      drawPoints(allPoints);
+
+      checkPositions(mouse, allPoints);
+      DrawText(TextFormat("allPoints[ %d x: %f \n y: %f \n", 1, allPoints[0].x, allPoints[0].y), 600, 20 ,10, RED);
+      DrawText(TextFormat("allPoints[ %d x: %f \n y: %f \n", 2, allPoints[1].x, allPoints[1].y), 600, 40 ,10, RED);
+      DrawText(TextFormat("allPoints[ %d x: %f \n y: %f \n", 3, allPoints[2].x, allPoints[2].y), 600, 60 ,10, RED);
+      DrawText(TextFormat("allPoints[ %d x: %f \n y: %f \n", 4, allPoints[3].x, allPoints[3].y), 600, 80 ,10, RED);
+      DrawText(TextFormat("allPoints[ %d x: %f \n y: %f \n", 5, allPoints[4].x, allPoints[4].y), 600, 100 ,10, RED);
+      DrawText(TextFormat("allPoints[ %d x: %f \n y: %f \n", 6, allPoints[5].x, allPoints[5].y), 600, 120 ,10, RED);
+      DrawText(TextFormat("allPoints[ %d x: %f \n y: %f \n", 7, allPoints[6].x, allPoints[6].y), 600, 140 ,10, RED);
+      DrawText(TextFormat("allPoints[ %d x: %f \n y: %f \n", 8, allPoints[7].x, allPoints[7].y), 600, 160 ,10, RED);
+      Vector2 points[3] =  {allPoints[0], allPoints[1], allPoints[2]};
+      Vector2 points2[3] = {allPoints[2], allPoints[3], allPoints[4]};
+      Vector2 points3[3] = {allPoints[4], allPoints[5], allPoints[6]};
+      Vector2 points4[3] = {allPoints[6], allPoints[7], allPoints[0]};
+
       curve1 = calloc(SAMPLES, sizeof(Vector2));
-      curve2 = calloc(SAMPLES, sizeof(Vector2)); 
+      curve2 = calloc(SAMPLES, sizeof(Vector2));
       curve3 = calloc(SAMPLES, sizeof(Vector2));
       curve4 = calloc(SAMPLES, sizeof(Vector2));
-      getPoints(points, curve1); 
-      getPoints(points2, curve2);  
-      getPoints(points3, curve3); 
-      getPoints(points4, curve4); 
-           
 
-      BeginDrawing();   
+      getPoints(points, curve1);
+
+      getPoints(points2, curve2);
+      getPoints(points3, curve3);
+      getPoints(points4, curve4);
+
+
+
+      BeginDrawing();
       ClearBackground(RAYWHITE);
 
-     
 
-      
+
+      drawPoints(allPoints);
       reverseArray(curve3);
       reverseArray(curve4);
 
-      createBilinearSurface(point1, point3, point7, point5);
-      
-      
-      point4.x = (point5.x + point3.x)/2;
-      point4.y = ( point5.y + point3.y)/2;
-      point2.x = (point1.x + point3.x)/2;
-      point2.y = ( point1.y + point3.y)/2;
+      //use this exact configuration unless the function changes ok
+      createBilinearSurface(allPoints[0], allPoints[2], allPoints[6], allPoints[4]);
 
-      //use this exact configuration unless the function changes ok 
+
       createRuledSurface(curve1, curve2, curve3, curve4);
-      
       blendSurface();
 
-      
       free(curve1);
       free(curve2);
       free(curve3);

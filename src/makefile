@@ -1,7 +1,8 @@
 RAYLIB ?= ../external/raylib/src/
 
-RAYGUI ?= ../external/
-
+GLAD ?= ../external/
 all:
-	gcc main.c -g -I. -I $(RAYLIB)  -L $(RAYLIB) -I $(RAYGUI) -L $(RAYGUI)  \
+	gcc main.c -DPLATFORM_DESKTOP -g -I. -I $(RAYLIB)  -L $(RAYLIB) -I $(GLAD) -L $(GLAD)  \
 	    -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+clean:
+	rm a.out

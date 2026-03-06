@@ -1,8 +1,27 @@
 
+#include "raylib.h"
+
+#include "rlgl.h"
 #define POINTCOUNT 8 
 #define SAMPLES 30 
 #define RADIUS 10.0
+#define ISMOUSEBUTTONDOWN IsMouseButtonDown(MOUSE_LEFT_BUTTON)
 
+
+
+void drawSurfaceMesh();
+Vector2 midPoint(Vector2 p1, Vector2 p2);
+typedef struct Point {
+  Vector2 p;
+  bool isMoved;
+
+}Point;
+
+
+Point magic = {
+   {0,0},
+   false
+};
 
 Vector2 interpPoints[SAMPLES][SAMPLES];
 Vector2 interpPoints2[SAMPLES][SAMPLES];
@@ -90,7 +109,9 @@ void createRuledSurface(Vector2 *curve1, Vector2 *curve2, Vector2 *curve3, Vecto
       float t = (float) j/(SAMPLES-1);
       interpPoints[i][j] = Vec2Lerp(curve1[i], curve3[i], t);
       interpPoints2[i][j] = Vec2Lerp(curve2[j], curve4[j],s);
-      /* DrawCircleV(interpPoints[i][j], 2, DARKGREEN); */
+      /* DrawCircleV(interpPoints[i][j], 2, RED); */
+
+      /* DrawCircleV(interpPoints2[i][j], 2, MAGENTA); */
     }
   }
 
@@ -109,10 +130,52 @@ void blendSurface(){
       blendedPoints[i][j] = blendedpoint;
     }
   }
+}
 
-  for(int i = 0; i < SAMPLES; i++){
-    for(int j = 0; j < SAMPLES; j++){
-      DrawCircleV(blendedPoints[i][j], 2, DARKGREEN);
+
+
+void checkPositions(Vector2 mouse, Vector2 positions[8]){
+  for(int i = 0; i < 8; i++){
+
+    if(CheckCollisionPointCircle(mouse, positions[i], RADIUS * 2) && ISMOUSEBUTTONDOWN  ){
+      if( (i + 1) % 2 != 0 ){
+        positions[i] = mouse;
+        if(i == 0){
+          positions[7] = midPoint(positions[6], positions[i]);
+          positions[i+1] = midPoint(positions[i + 2], positions[i]);
+	  DrawText(TextFormat("midpoints: i: %d \n i + 1: %d \n i + 2: %d \n", 7, i + 1, i + 2), 20, 20, 20, RED);
+        }
+	else if(i == 6){
+          positions[i-1] = midPoint(positions[i - 2], positions[i]);
+          positions[i+1] = midPoint(positions[0], positions[i]);
+	  
+	  DrawText(TextFormat("midpoints: i: %d \n i + 1: %d \n i + 2: %d \n", i, i + 1, i + 2), 20, 20, 20, RED);
+
+	}
+        else{
+	  positions[i-1] = midPoint(positions[i - 2], positions[i]);
+          positions[i+1] = midPoint(positions[i + 2], positions[i]);
+	  
+	  DrawText(TextFormat("midpoints: i: %d \n i + 1: %d \n i + 2: %d \n", i, i + 1, i + 2), 20, 20, 20, RED);
+
+        }
+      }
+
     }
+
   }
 }
+
+Vector2 midPoint(Vector2 p1, Vector2 p2){
+  Vector2 result =  {((p1.x + p2.x) /2),((p1.y + p2.y) / 2) };
+  return result;
+}
+
+GLuint vao = 0;
+GLuint vbo = 0;
+glGenVertexArrays(1, &vao);
+glBindVertexArray(vao);
+glGenBuffers(1, &vbo);
+glBindBuffer(GL_ARRAY_BUFFER, vbo);
+glBufferData(GL_ARRAY_BUFFER, (SAMPLES * SAMPLES) * sizeof(Vector2) , particles, GL_STATIC_DRAW);
+
