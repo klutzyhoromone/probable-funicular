@@ -22,25 +22,25 @@ buildInputs = with pkgs; [
   SDL2
   libGLU
   libxkbcommon
-  xorg.libX11
-  xorg.libXcursor
+  libX11
+  libXcursor
   freeglut
-  xorg.libXi
-  xorg.libXinerama
-  xorg.libXrandr
+  libXi
+  libXinerama
+  libXrandr
   glfw
-  xorg.libxcb
+  libxcb
   freetype
 ];
 
         nativeBuildInputs = with pkgs;[
           cmake
-	        xorg.libX11.dev
-          xorg.libXcursor
-          xorg.libXi
+	        libX11.dev
+          libXcursor
+          libXi
           glew
-          xorg.libXinerama
-          xorg.libXrandr
+          libXinerama
+          libXrandr
           SDL2    
           libGLU
           pkg-config
@@ -52,13 +52,13 @@ buildInputs = with pkgs; [
           export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath (with pkgs; [
             libGL 
             glew
-            xorg.libX11
+            libX11
             SDL2
             libGLU
-            xorg.libXcursor
-            xorg.libXi
-            xorg.libXinerama
-            xorg.libXrandr
+            libXcursor
+            libXi
+            libXinerama
+            libXrandr
             glfw
 	          freeglut
             openal
@@ -69,14 +69,14 @@ buildInputs = with pkgs; [
 
           # For compile-time search
           export PKG_CONFIG_PATH=${pkgs.lib.makeLibraryPath (with pkgs; [
-            xorg.libX11
+            libX11
             SDL2
             glew
             libGLU
-            xorg.libXcursor
-            xorg.libXi
-            xorg.libXinerama
-            xorg.libXrandr
+            libXcursor
+            libXi
+            libXinerama
+            libXrandr
             glfw
             freeglut
           ])}/lib/pkgconfig:$PKG_CONFIG_PATH

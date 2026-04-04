@@ -5,34 +5,52 @@
 #define POINTCOUNT 8 
 #define SAMPLES 30 
 #define RADIUS 10.0
-#define ISMOUSEBUTTONDOWN IsMouseButtonDown(MOUSE_LEFT_BUTTON)
+
+#define BAROON     CLITERAL(Color){ 190, 33, 55, 125}     // Maroon
+Texture2D texture;
 
 
-
-void drawSurfaceMesh();
+void initPatch(){
+  
+  texture = LoadTexture("resources/wall.png");
+}
+/* GLuint vao = 0; */
+/* GLuint vbo = 0; */
+/* RenderTexture debugTexture; */
+/* void initPatch(){ */
+/*   glGenVertexArrays(1, &vao); */
+/*   glBindVertexArray(vao); */
+/*   glGenBuffers(1, &vbo); */
+/*   glBindBuffer(GL_ARRAY_BUFFER, vbo); */
+/* } */
+int selectionIndex = -1;
 Vector2 midPoint(Vector2 p1, Vector2 p2);
 typedef struct Point {
   Vector2 p;
-  bool isMoved;
-
+  bool hasMoved;
+  bool movePoint;
 }Point;
 
 
-Point magic = {
-   {0,0},
-   false
-};
+/* void DrawCircleT(Vector2 pos,  Color color){ */
+/*   DrawTexture(debugTexture.texture, */
+/* 	      (pos.x - debugTexture.texture.width*0.5f), */
+/* 	      (pos.y - debugTexture.texture.height*0.5f), */
+/* 	      color); */
 
-Vector2 interpPoints[SAMPLES][SAMPLES];
-Vector2 interpPoints2[SAMPLES][SAMPLES];
-Vector2 bilinearPoint[SAMPLES][SAMPLES];
-Vector2 blendedPoints[SAMPLES][SAMPLES];
+/* } */
+
+
+Vector2 interpPoints[SAMPLES * SAMPLES];
+Vector2 interpPoints2[SAMPLES * SAMPLES];
+Vector2 bilinearPoint[SAMPLES * SAMPLES];
+Vector2 blendedPoints[SAMPLES * SAMPLES];
 void getPoints(Vector2 *points,Vector2 *out){
   for(int i = 0; i < SAMPLES; i++){\
     float t = (float)i / (SAMPLES - 1);
     out[i] = GetSplinePointBezierQuad(points[0], points[1], points[2], t); 
     
-    DrawCircleV(out[i], 5, BLACK);
+    /* DrawCircleV(out[i], 5, BLACK); */
 
   }
 }
@@ -52,9 +70,9 @@ void reverseArray(Vector2 *out){
   }
 }
 
-void drawPoints(Vector2 *allPoints){
+void drawPoints(Point *allPoints){
   for(int i = 0; i < POINTCOUNT; i++){ 
-    DrawCircleV(allPoints[i], RADIUS, MAROON);
+    DrawCircleV(allPoints[i].p, RADIUS, BAROON);
 
   }
 }
@@ -90,7 +108,7 @@ void createBilinearSurface(Vector2 point1, Vector2 point2, Vector2 point3, Vecto
     for(int j=0; j < SAMPLES; j++){
       
       float t = (float) j/(SAMPLES-1);
-      bilinearPoint[i][j]= Vec2BiLerp( s,  t,  point1,  point2,  point3,  point4);
+      bilinearPoint[(SAMPLES * i) + j]= Vec2BiLerp( s,  t,  point1,  point2,  point3,  point4);
       /* DrawCircleV(bilinearPoint[i][j], 3, BLUE); */
     }
   }
@@ -107,11 +125,11 @@ void createRuledSurface(Vector2 *curve1, Vector2 *curve2, Vector2 *curve3, Vecto
     for(int j = 0; j < SAMPLES;j++){
       
       float t = (float) j/(SAMPLES-1);
-      interpPoints[i][j] = Vec2Lerp(curve1[i], curve3[i], t);
-      interpPoints2[i][j] = Vec2Lerp(curve2[j], curve4[j],s);
-      /* DrawCircleV(interpPoints[i][j], 2, RED); */
+      interpPoints[(SAMPLES *i ) + j] = Vec2Lerp(curve1[i], curve3[i], t);
+      interpPoints2[(SAMPLES * i) + j] = Vec2Lerp(curve2[j], curve4[j],s);
+      /* DrawCircleV(interpPoints[(SAMPLES * i) +j], 2, RED); */
 
-      /* DrawCircleV(interpPoints2[i][j], 2, MAGENTA); */
+      DrawCircleV(interpPoints2[(SAMPLES * i) +j], 2, BLANK);
     }
   }
 
@@ -125,57 +143,128 @@ void blendSurface(){
   for(int i = 0; i < SAMPLES; i++){
     for(int j = 0; j < SAMPLES; j++){
       Vector2 blendedpoint;
-	blendedpoint.x = interpPoints2[i][j].x + interpPoints[i][j].x - bilinearPoint[i][j].x;
-	blendedpoint.y = interpPoints2[i][j].y + interpPoints[i][j].y - bilinearPoint[i][j].y;
-      blendedPoints[i][j] = blendedpoint;
+      blendedpoint.x = interpPoints2[(SAMPLES * i) +j].x + interpPoints[(SAMPLES * i) +j].x - bilinearPoint[(SAMPLES * i) +j].x;
+      blendedpoint.y = interpPoints2[(SAMPLES * i) +j].y + interpPoints[(SAMPLES * i) +j].y - bilinearPoint[(SAMPLES * i) +j].y;
+      blendedPoints[(SAMPLES * i) +j] = blendedpoint;
+      /* DrawCircleV(blendedPoints[(SAMPLES * i) +j], 2, MAGENTA); */
     }
+    
+
+
   }
+  
 }
 
 
 
-void checkPositions(Vector2 mouse, Vector2 positions[8]){
-  for(int i = 0; i < 8; i++){
-
-    if(CheckCollisionPointCircle(mouse, positions[i], RADIUS * 2) && ISMOUSEBUTTONDOWN  ){
-      if( (i + 1) % 2 != 0 ){
-        positions[i] = mouse;
-        if(i == 0){
-          positions[7] = midPoint(positions[6], positions[i]);
-          positions[i+1] = midPoint(positions[i + 2], positions[i]);
-	  DrawText(TextFormat("midpoints: i: %d \n i + 1: %d \n i + 2: %d \n", 7, i + 1, i + 2), 20, 20, 20, RED);
-        }
-	else if(i == 6){
-          positions[i-1] = midPoint(positions[i - 2], positions[i]);
-          positions[i+1] = midPoint(positions[0], positions[i]);
-	  
-	  DrawText(TextFormat("midpoints: i: %d \n i + 1: %d \n i + 2: %d \n", i, i + 1, i + 2), 20, 20, 20, RED);
-
-	}
-        else{
-	  positions[i-1] = midPoint(positions[i - 2], positions[i]);
-          positions[i+1] = midPoint(positions[i + 2], positions[i]);
-	  
-	  DrawText(TextFormat("midpoints: i: %d \n i + 1: %d \n i + 2: %d \n", i, i + 1, i + 2), 20, 20, 20, RED);
-
-        }
+void checkPositions(Vector2 mouse, Point positions[8]){
+  
+  if(selectionIndex == -1){
+    for (int i = 0; i < 8; i++) {
+      if (CheckCollisionPointCircle(mouse, positions[i].p, RADIUS * 2)) {
+	selectionIndex = i;
+	break;
       }
-
     }
+  }
+  
+  
+  
+  if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && selectionIndex != -1 && selectionIndex != 6 && selectionIndex != 0 && selectionIndex % 2 == 0){
+
+    if(!positions[selectionIndex + 1].hasMoved) positions[selectionIndex + 1].p = midPoint(positions[selectionIndex].p, positions[selectionIndex + 2].p);
+    
+    if(!positions[selectionIndex - 1].hasMoved) positions[selectionIndex - 1].p = midPoint(positions[selectionIndex].p, positions[selectionIndex - 2].p);
+    positions[selectionIndex].p = mouse;
 
   }
+  // midpoints
+  if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && selectionIndex != -1 && selectionIndex % 2 != 0){
+    
+    positions[selectionIndex].p = mouse;
+    positions[selectionIndex].hasMoved = true;
+  }
+
+
+  //edge cases
+  if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && selectionIndex == 6){
+    positions[6].p = mouse;
+    
+    if(!positions[selectionIndex + 1].hasMoved) positions[selectionIndex + 1].p = midPoint(positions[selectionIndex].p, positions[0].p);
+    
+    if(!positions[selectionIndex - 1].hasMoved) positions[selectionIndex - 1].p = midPoint(positions[selectionIndex].p, positions[selectionIndex - 2].p);
+  }
+
+  if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && selectionIndex == 0){
+    
+    positions[0].p = mouse;
+    
+    if(!positions[selectionIndex + 1].hasMoved) positions[selectionIndex + 1].p = midPoint(positions[selectionIndex].p, positions[selectionIndex + 2].p);
+    
+    if(!positions[7].hasMoved) positions[7].p = midPoint(positions[selectionIndex].p, positions[6].p);
+  }
+
+  if(IsMouseButtonUp(MOUSE_LEFT_BUTTON)){
+    selectionIndex = -1;
+  }
+  
 }
 
 Vector2 midPoint(Vector2 p1, Vector2 p2){
   Vector2 result =  {((p1.x + p2.x) /2),((p1.y + p2.y) / 2) };
   return result;
 }
+void DrawPatch(){
+  
+Vector2 uvs[SAMPLES * SAMPLES];
 
-GLuint vao = 0;
-GLuint vbo = 0;
-glGenVertexArrays(1, &vao);
-glBindVertexArray(vao);
-glGenBuffers(1, &vbo);
-glBindBuffer(GL_ARRAY_BUFFER, vbo);
-glBufferData(GL_ARRAY_BUFFER, (SAMPLES * SAMPLES) * sizeof(Vector2) , particles, GL_STATIC_DRAW);
+ for (int i = 0; i < SAMPLES; i++) {
+   
+   float s =  1 - (float)i / (SAMPLES - 1);
+   for (int j = 0; j < SAMPLES; j++) {
+     
+     float t = (float)j / (SAMPLES - 1);
+     
+     uvs[i * SAMPLES + j] = (Vector2){ s, t };
+   }
+ }
+ 
+ 
+ 
+ rlSetTexture(texture.id);
+ rlBegin(RL_TRIANGLES);
+ 
+ for (int i = 0; i < SAMPLES - 1; i++) {
+   for (int j = 0; j < SAMPLES - 1; j++) {
+     //fixes weird tint
+     rlColor4ub(255, 255, 255, 255);
+      int i0 = i * SAMPLES + j;
+      int i1 = i * SAMPLES + (j + 1);
+      int i2 = (i + 1) * SAMPLES + j;
+      int i3 = (i + 1) * SAMPLES + (j + 1);
+      
+      // Triangle 1
+      rlTexCoord2f(uvs[i0].x, uvs[i0].y);
+      rlVertex2f(blendedPoints[i0].x, blendedPoints[i0].y);
+      
+      rlTexCoord2f(uvs[i2].x, uvs[i2].y);
+      rlVertex2f(blendedPoints[i2].x, blendedPoints[i2].y);
+      
+      rlTexCoord2f(uvs[i1].x, uvs[i1].y);
+      rlVertex2f(blendedPoints[i1].x, blendedPoints[i1].y);
+      
+      // Triangle 2
+      rlTexCoord2f(uvs[i1].x, uvs[i1].y);
+      rlVertex2f(blendedPoints[i1].x, blendedPoints[i1].y);
+      
+      rlTexCoord2f(uvs[i2].x, uvs[i2].y);
+      rlVertex2f(blendedPoints[i2].x, blendedPoints[i2].y);
+      
+      rlTexCoord2f(uvs[i3].x, uvs[i3].y);
+      rlVertex2f(blendedPoints[i3].x, blendedPoints[i3].y);
+   }
+ }
+ 
+ rlEnd();
+}
 
